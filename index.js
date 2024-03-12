@@ -52,6 +52,7 @@ async function tryInitialize() {
   }
 }
 
+
 async function main() {
   try {
     await tryInitialize();
@@ -124,3 +125,4 @@ async function main() {
 
 
 main().catch((err) => console.error(err));
+
