@@ -1,0 +1,27 @@
+{
+  "name": "tokeneduprime",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@influxdata/influxdb-client": "1.33.2",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@openzeppelin/contracts": "^4.5.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^5.7.1",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "path": "^0.12.7",
+    "web3": "^4.5.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "hardhat": "^2.20.1"
+  }
+}
