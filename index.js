@@ -74,9 +74,11 @@ async function main() {
 
     const otheraddress = "0x62BccC37eBF73A77C0A3a42846023E2585204430";
     //////////////////////////testing part ==============>
+    await getBalance(otheraddress);
+
     
 
-    await getBalance(otheraddress);
+
 /*
     const privatekey = "2c579053960b08413d38a6c0a4f9bc99d08835b6abf69eaf3b218fd1d85dce97";
     const amount = ethers.utils.parseUnits("100",decimals);
@@ -96,8 +98,7 @@ async function main() {
 */
 
 
-    await getBalance(address);
-    await getBalance(otheraddress);
+
 
 
 
@@ -107,6 +108,8 @@ async function main() {
     //const amount = ethers.utils.parseUnits("10",decimals);
     const tx = await contract.transfer(otheraddress, 10);
     const receipt = await tx.wait();
+    await getBalance(address);
+    await getBalance(otheraddress);
     
    
 

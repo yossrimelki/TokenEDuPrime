@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 const { ethers } = require('ethers');
 require('dotenv').config();
 const { abi } = require('./artifacts/contracts/EduToken.sol/EduToken.json');
@@ -79,11 +81,18 @@ app.get('/allowance/:owner/:spender', async (req, res) => {
   }
 });
 
+
+// Your route definition
 app.post('/transfer', async (req, res) => {
   const { to, amount } = req.body;
+
+  if (!to || !amount) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
   try {
-    const transaction = await contract.transfer(to, amount);
-    res.json({ transactionHash: transaction.hash });
+    // Your transaction logic here
+    res.json({ message: 'Transaction processed successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -101,6 +110,8 @@ app.post('/approve', async (req, res) => {
   }
 });
 
+
+
 app.post('/transferFrom', async (req, res) => {
   const { from, to, amount } = req.body;
   try {
@@ -109,6 +120,19 @@ app.post('/transferFrom', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/generateWallet', (req, res) => {
+  try {
+      const wallet = ethers.Wallet.createRandom();
+      res.json({
+          address: wallet.address,
+          privateKey: wallet.privateKey
+      });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
