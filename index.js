@@ -72,8 +72,8 @@ async function main() {
     const address = "0x435Bc71727b10315A47F574F86B173261493C35f";
     
 
-    const otheraddress = "0x62BccC37eBF73A77C0A3a42846023E2585204430";
-    //////////////////////////testing part ==============>
+    const otheraddress = "0x42791C2Ec3Ff1277899b9c3D5bD4dBd194cFF43F";
+    //////////////////////////testing part ==============>"0x62BccC37eBF73A77C0A3a42846023E2585204430"
     await getBalance(otheraddress);
 
     

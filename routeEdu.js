@@ -14,9 +14,40 @@ const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(API_URL);
 const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-
+async function isInitialized() {
+  try {
+    const initialized = await contract.isInitialized();
+    return initialized;
+  } catch (error) {
+    console.error("Error checking contract initialization:", error);
+    throw error; // It's usually a good idea to rethrow the error after logging it.
+  }
+}
 // Define Express routes
+async function tryInitialize() {
+  try {
+    const initialized = await isInitialized();
+    if (!initialized) {
+      // Assuming initialize() doesn't require arguments for simplicity; adjust as needed.
+      const initializeTx = await contract.initialize("EduToken", "EduT", 18);
+      const receipt = await initializeTx.wait();
 
+      // Log the entire receipt to inspect events and status
+      console.log("Transaction receipt:", receipt);
+
+      // Check if transaction was successful based on receipt; adjust condition as necessary
+      if (receipt.status === 1) {
+        console.log("Contract initialized successfully.");
+      } else {
+        console.log("Initialization failed.");
+      }
+    } else {
+      console.log("Contract is already initialized.");
+    }
+  } catch (error) {
+    console.error("Error during initialization:", error);
+  }
+}
 app.get('/name', async (req, res) => {
   try {
     const name = await contract.name();
@@ -92,6 +123,7 @@ app.post('/transfer', async (req, res) => {
 
   try {
     // Your transaction logic here
+    const balance = await contract.transfer(to,amount);
     res.json({ message: 'Transaction processed successfully' });
   } catch (error) {
     console.error(error);
@@ -102,8 +134,9 @@ app.post('/transfer', async (req, res) => {
 app.post('/approve', async (req, res) => {
   const { spender, amount } = req.body;
   try {
-    const transaction = await contract.approve(spender, amount);
-    res.json({ transactionHash: transaction.hash });
+    await tryInitialize();
+    const tx = await contract.transfer(spender, 1)
+    res.json({ transactionHash: tx.hash });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -139,6 +172,9 @@ app.get('/generateWallet', (req, res) => {
 // Add more routes for other contract functions as needed
 
 // Start the Express server
+
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
+  
 });
+

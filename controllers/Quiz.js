@@ -1,12 +1,17 @@
 const Quiz = require('../models/Quiz.js');
+const SessionQuiz = require('../models/SessionQuiz.js');
+const DomainVerified = require('../models/DomainVerified.js');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const dotenv = require("dotenv");
+const contract = require('../models/cont.js');
 
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+///////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////
 
 async function parseResponse(response) {
     try {
@@ -20,17 +25,48 @@ async function parseResponse(response) {
 }
 
 
-
-
+exports.checkAnswer = async (req, res) => {
+    const { quizId, answer } = req.body;
+    try {
+      // Find the quiz by its ID
+      const quiz = await Quiz.findById(quizId);
+  
+      if (!quiz) {
+        console.log("Quiz not found");
+        return;
+      }
+  
+      // Check if the answer is correct
+      if (quiz.correct_answer === answer) {
+        const otheraddress = "0x42791C2Ec3Ff1277899b9c3D5bD4dBd194cFF43F"; // Replace with the actual recipient address
+        const amount = 10; // Replace with the actual amount of tokens to transfer
+        const tx = await contract.transfer(otheraddress, amount);
+        console.log("Good job! Your answer is correct.");
+  
+        // Delete the SessionQuiz document for this user and quiz
+        await SessionQuiz.deleteByUserAndQuiz("662851410232e012f02d247c", quizId);
+      } else {
+        console.log("Sorry, your answer is incorrect.");
+  
+        // Delete the SessionQuiz document for this user and quiz
+        await SessionQuiz.deleteByUserAndQuiz("662851410232e012f02d247c", quizId);
+        const domainVerified = await DomainVerified.find({ iduser: "662851410232e012f02d247c" })
+         const updateData = {score: domainVerified.score};
+        await DomainVerified.findByIdAndUpdate(id, updateData);
+        
+      }
+    } catch (err) {
+      console.error("An error occurred while checking the answer:", err);
+    }
+  }
 // Controller function to create a new quiz question
+
 exports.createQuizQuestion = async (req, res) => {
-    
     const { category, level } = req.body;
     console.log('Received payload:', { category, level });
     const generatedQuestions = [];
 
     try {
-
         // For text-only input, use the gemini-pro model
         const chat = model.startChat({
             history: [
@@ -48,33 +84,28 @@ exports.createQuizQuestion = async (req, res) => {
             },
         });
 
-
-        const msg = `Generate 1 JSON responses about ${level} level ${category} in the following format :
-              {
-                "question": "question",
-                "correct_answer": "answer",
-                "choices": [
-                  "choice 1",
-                  "choice 2",
-                  "choice 3",
-                  "choice 4"
-                ]
-              }
-              i need to use the json response in my code later so please provide only the json format and nothing else do not even enumerate the responses 
-              again please keep in mind that the response is going to be parsed and used later so i need a  json response and no extra.
-              just want the  json response that starts with { and ends with } do not add these at the beginning or end \`\`\` `;
+        const msg = `Generate 1 JSON response about ${level} level ${category} in the following format :
+          {
+            "question": "question",
+            "correct_answer": "answer",
+            "choices": [
+              "choice 1",
+              "choice 2",
+              "choice 3",
+              "choice 4"
+            ]
+          }`;
 
         const result = await chat.sendMessage(msg);
         console.log("res: ", result);
         const response = await result.response;
-        for (let i = 0; i < 2; i++) {
-            const msg = `great give me 1 more`;
 
+        for (let i = 0; i < 2; i++) {
+            const msg = `Great! Give me 1 more.`;
             const result = await chat.sendMessage(msg);
             console.log(result);
             const response = await result.response;
             console.log(response.text);
-
 
             const text = response.text();
             console.log(response.text);
@@ -85,28 +116,30 @@ exports.createQuizQuestion = async (req, res) => {
                 correct_answer: parsedData.correct_answer,
                 choices: parsedData.choices,
             });
-            console.log("question to be saved: ",newQuestion);
-             await newQuestion.save();
+
+            console.log("question to be saved: ", newQuestion);
+            await newQuestion.save();
             generatedQuestions.push(newQuestion);
         }
-        console.log(response.text());
-        console.log("response: ", response);
-        if (response.hasErrorMessage) {
-            console.warn("Model is overloaded or failed to generate a response. Using static data.");
-            // Add static data to the database (replace with your actual data)
 
-        }
-
+        // Create a new SessionQuiz after successfully saving the generated quiz
+        const now = new Date();
+        const fifteenMinutesLater = new Date(now.getTime() + 15 * 60000); // 15 minutes in milliseconds
+        const sessionquiz = new SessionQuiz({
+            idquiz: generatedQuestions[0]._id, // Assuming you want to associate with the first generated quiz
+            iduser: "662851410232e012f02d247c",
+            datedeb: now,
+            datefin: fifteenMinutesLater
+        });
+        await sessionquiz.save();
+        console.log("SessionQuiz saved: ", sessionquiz);
 
         res.status(201).json(generatedQuestions);
     } catch (error) {
         console.error("Error:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
-
-
-
 };
-
 
 
 exports.createQuizQuestion5 = async (req, res) => {

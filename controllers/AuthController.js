@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require ("nodemailer");
 const config = require("../config/config")
 const randomstring = require ("randomstring");
+const ethers = require('ethers');
+
 
 ///////////////////////////////////////////////////////
 
@@ -48,8 +50,38 @@ const register = (req, res, next) => {
 };
 
 const login = (req, res, next) => {
-    // Your login implementation remains unchanged
+    var username = req.body.email;
+    var password = req.body.password;
+
+    User.findOne({ email: username })
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ message: 'No user found!' });
+            }
+
+            bcrypt.compare(password, user.password, function (err, result) {
+                if (err || !result) {
+                    return res.status(401).json({ message: 'Password does not match' });
+                }
+
+                let token = jwt.sign({ name: user.name }, 'yourSecretKey', {
+                    expiresIn: '24h'
+                });
+                let refreshsecretkey = jwt.sign({ name: user.name }, 'refreshsecretkey', {
+                    expiresIn: '48h'
+                });
+                res.status(200).json({
+                    message: 'Login Successful!',
+                    token,
+                    refreshsecretkey,
+                });
+            });
+        })
+        .catch((error) => {
+            res.status(500).json({ message: 'An error occurred!' });
+        });
 };
+
 
 const sendResetPassword = async (name, email, token) => {
     try {
