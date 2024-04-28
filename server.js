@@ -79,6 +79,17 @@ app.listen(PORT, () => {
    console.log(`Server is running on port ${PORT}`);
 });
 
+app.get('/balance/:account', async (req, res) => {
+  const account = req.params.account;
+  try {
+    const balance = await contract.balanceOf(account);
+    const plainBalance = await balance.toNumber(); // Wait for the Promise to resolve before calling toNumber()
+    res.json({ balance: plainBalance });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 // Define routes
 app.use('/api/admin', AdminRoute);
 app.use('/api/auth', AuthRoute);
@@ -86,7 +97,6 @@ app.use('/api/quiz', QuizRoute); // Use a separate base path for QuizRouteapp.us
 app.use('/api/cours', coursRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/domain', domainRoutes);
-
 
 
 async function main() {

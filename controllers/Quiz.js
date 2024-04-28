@@ -59,9 +59,7 @@ exports.checkAnswer = async (req, res) => {
       console.error("An error occurred while checking the answer:", err);
     }
   }
-// Controller function to create a new quiz question
-
-exports.createQuizQuestion = async (req, res) => {
+  exports.createQuizQuestion = async (req, res) => {
     const { category, level } = req.body;
     console.log('Received payload:', { category, level });
     const generatedQuestions = [];
@@ -115,33 +113,45 @@ exports.createQuizQuestion = async (req, res) => {
                 question: parsedData.question,
                 correct_answer: parsedData.correct_answer,
                 choices: parsedData.choices,
+                iddomain: "662d633f680440831d1abe43"
             });
 
             console.log("question to be saved: ", newQuestion);
-            await newQuestion.save();
-            generatedQuestions.push(newQuestion);
+            try {
+                const savedQuestion = await newQuestion.save();
+                generatedQuestions.push(savedQuestion);
+                if (generatedQuestions.length === 2) {
+                    createSessionQuiz(generatedQuestions[0]._id);
+                }
+            } catch (err) {
+                console.error("Error saving question:", err);
+                res.status(500).json({ error: "Internal server error" });
+            }
         }
 
-        // Create a new SessionQuiz after successfully saving the generated quiz
-        const now = new Date();
-        const fifteenMinutesLater = new Date(now.getTime() + 15 * 60000); // 15 minutes in milliseconds
-        const sessionquiz = new SessionQuiz({
-            idquiz: generatedQuestions[0]._id, // Assuming you want to associate with the first generated quiz
-            iduser: "662851410232e012f02d247c",
-            datedeb: now,
-            datefin: fifteenMinutesLater
-        });
-        await sessionquiz.save();
-        console.log("SessionQuiz saved: ", sessionquiz);
-
-        res.status(201).json(generatedQuestions);
+        async function createSessionQuiz(idquiz) {
+            const now = new Date();
+            const fifteenMinutesLater = new Date(now.getTime() + 15 * 60000); // 15 minutes in milliseconds
+            const sessionquiz = new SessionQuiz({
+              idquiz: idquiz,
+              iduser: "662851410232e012f02d247c",
+              datedeb: now,
+              datefin: fifteenMinutesLater
+            });
+            try {
+              const savedSessionQuiz = await sessionquiz.save();
+              console.log("SessionQuiz saved: ", savedSessionQuiz);
+              res.status(201).json(generatedQuestions);
+            } catch (err) {
+              console.error("Error saving SessionQuiz:", err);
+              res.status(500).json({ error: "Internal server error" });
+            }
+          }
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 };
-
-
 exports.createQuizQuestion5 = async (req, res) => {
     const { category, level } = req.body; // Add numberOfQuestions parameter
 
