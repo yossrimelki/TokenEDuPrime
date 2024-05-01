@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
 require('dotenv').config();
-
+const cors = require('cors');
 const contract = require('./models/cont.js');
 
 
@@ -46,8 +46,8 @@ async function isInitialized() {
 /////////////////////////////////////////////////////////
 
 
-const AdminRoute = require('./routes/admin');
-const AuthRoute = require('./routes/auth');
+const AuthRoute = require('./routes/auth.js');
+const userRoute = require("./routes/userRoute.js");
 const QuizRoute = require('./routes/Quiz'); // Import QuizRoute
 const coursRoutes = require('./routes/coursRoutes.js');
 const cartRoutes = require ('./routes/cartRoutes.js');
@@ -57,6 +57,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/pdmDB', {
    useNewUrlParser: true,
    useUnifiedTopology: true,
 });
+
 const db = mongoose.connection;
 
 db.on('error', (err) => {
@@ -68,6 +69,7 @@ db.once('open', () => {
 });
 
 const app = express();
+app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json()); // Replace bodyParser with built-in express.json() middleware
 app.use(express.urlencoded({ extended: true })); // You can remove this line if you're not using URL-encoded bodies
@@ -91,12 +93,12 @@ app.get('/balance/:account', async (req, res) => {
   }
 });
 // Define routes
-app.use('/api/admin', AdminRoute);
 app.use('/api/auth', AuthRoute);
 app.use('/api/quiz', QuizRoute); // Use a separate base path for QuizRouteapp.use('/cours', coursRoutes);
 app.use('/api/cours', coursRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/domain', domainRoutes);
+app.use('/user', userRoute);
 
 
 async function main() {

@@ -10,6 +10,21 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 ///////////////////////////////////////////////////////////////
+const chat = model.startChat({
+  history: [
+      {
+          role: "user",
+          parts: "Hello.",
+      },
+      {
+          role: "model",
+          parts: "Great to meet you. What would you like to know?",
+      },
+  ],
+  generationConfig: {
+      maxOutputTokens: 100,
+  },
+});
 
 ///////////////////////////////////////////////////////////////
 
@@ -39,7 +54,7 @@ exports.checkAnswer = async (req, res) => {
       // Check if the answer is correct
       if (quiz.correct_answer === answer) {
         const otheraddress = "0x42791C2Ec3Ff1277899b9c3D5bD4dBd194cFF43F"; // Replace with the actual recipient address
-        const amount = 10; // Replace with the actual amount of tokens to transfer
+        const amount = 1; // Replace with the actual amount of tokens to transfer
         const tx = await contract.transfer(otheraddress, amount);
         console.log("Good job! Your answer is correct.");
   
@@ -66,21 +81,7 @@ exports.checkAnswer = async (req, res) => {
 
     try {
         // For text-only input, use the gemini-pro model
-        const chat = model.startChat({
-            history: [
-                {
-                    role: "user",
-                    parts: "Hello.",
-                },
-                {
-                    role: "model",
-                    parts: "Great to meet you. What would you like to know?",
-                },
-            ],
-            generationConfig: {
-                maxOutputTokens: 100,
-            },
-        });
+        
 
         const msg = `Generate 1 JSON response about ${level} level ${category} in the following format :
           {
@@ -98,11 +99,7 @@ exports.checkAnswer = async (req, res) => {
         console.log("res: ", result);
         const response = await result.response;
 
-        for (let i = 0; i < 2; i++) {
-            const msg = `Great! Give me 1 more.`;
-            const result = await chat.sendMessage(msg);
-            console.log(result);
-            const response = await result.response;
+     
             console.log(response.text);
 
             const text = response.text();
@@ -119,15 +116,13 @@ exports.checkAnswer = async (req, res) => {
             console.log("question to be saved: ", newQuestion);
             try {
                 const savedQuestion = await newQuestion.save();
-                generatedQuestions.push(savedQuestion);
-                if (generatedQuestions.length === 2) {
-                    createSessionQuiz(generatedQuestions[0]._id);
-                }
+              
+                    createSessionQuiz(savedQuestion._id);
             } catch (err) {
                 console.error("Error saving question:", err);
                 res.status(500).json({ error: "Internal server error" });
             }
-        }
+        
 
         async function createSessionQuiz(idquiz) {
             const now = new Date();
@@ -141,7 +136,7 @@ exports.checkAnswer = async (req, res) => {
             try {
               const savedSessionQuiz = await sessionquiz.save();
               console.log("SessionQuiz saved: ", savedSessionQuiz);
-              res.status(201).json(generatedQuestions);
+              res.status(201).json(newQuestion);
             } catch (err) {
               console.error("Error saving SessionQuiz:", err);
               res.status(500).json({ error: "Internal server error" });

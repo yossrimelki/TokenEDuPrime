@@ -1,12 +1,11 @@
 const express = require('express');
+const { register, loginWithEmailPassword, loginWithGoogle, loginWithFacebook } = require('../controllers/AuthController');
+
 const router = express.Router();
 
-const AuthController = require('../controllers/AuthController');
-const upload = require('../middleware/upload');
-
-router.post('/register', upload.single('img'), AuthController.register);
-router.post('/login', AuthController.login);
-router.post('/forget-password', AuthController.forgetPassword);
-router.get('/reset-password', AuthController.resetPassword);
+router.post('/registration', register);
+router.post('/login/email', loginWithEmailPassword);
+router.post('/login/google', loginWithGoogle);
+router.post('/login/facebook', loginWithFacebook);
 
 module.exports = router;
