@@ -1,7 +1,9 @@
-const mongoose   =  require ('mongoose')
-const Schema     =  mongoose.Schema
+const mongoose = require("mongoose");
 
-const CourS = new Schema(
+
+const { Schema } = mongoose;
+
+const produitSchema = new Schema(
   {
     nameP: {
       type: String,
@@ -15,20 +17,14 @@ const CourS = new Schema(
       type: String,
       required: true
     },
-
-    priceP: {
-      type: String,
+    rating: {
+      type: String, // Utiliser Schema.Types.Mixed pour accepter les nombres et les caractères
       required: true,
-    },
-   
-
+    }
   },
   {
     timestamps: true,
   }
 );
-const cour = mongoose.model('Cour', CourS)
-module.exports = cour;
- 
-
-
+const CourS = mongoose.model('Cours', produitSchema);
+module.exports = CourS;

@@ -1,5 +1,5 @@
 const express = require('express');
-const { createQuizQuestion, fetchRandomQuizQuestion,checkAnswer } = require('../controllers/Quiz.js');
+const { createQuizQuestion, fetchRandomQuizQuestion,checkAnswer ,createProblem,solveProblem,createNextQuestion} = require('../controllers/Quiz.js');
 
 const router = express.Router();
 
@@ -7,5 +7,8 @@ const router = express.Router();
 router.post('/quiz', createQuizQuestion);
 router.get('/quiz', fetchRandomQuizQuestion);
 router.post('/anwser',checkAnswer);
+router.post('/prob',createProblem);
+router.post('/solve',solveProblem);
+router.post('/next', createNextQuestion);
 
 module.exports = router;

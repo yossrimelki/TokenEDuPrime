@@ -5,6 +5,11 @@ require('dotenv').config();
 const cors = require('cors');
 const contract = require('./models/cont.js');
 
+const path = require( 'path');
+const { fileURLToPath } =require( 'url');
+
+
+
 
 /////////////////////////////////////////////////////////
 //==============================================================
@@ -52,6 +57,7 @@ const QuizRoute = require('./routes/Quiz'); // Import QuizRoute
 const coursRoutes = require('./routes/coursRoutes.js');
 const cartRoutes = require ('./routes/cartRoutes.js');
 const domainRoutes = require ('./routes/Domain.js');
+const courssRoutes = require ('./routes/courssRoutes.js');
 
 mongoose.connect('mongodb://127.0.0.1:27017/pdmDB', {
    useNewUrlParser: true,
@@ -73,7 +79,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json()); // Replace bodyParser with built-in express.json() middleware
 app.use(express.urlencoded({ extended: true })); // You can remove this line if you're not using URL-encoded bodies
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 3000;
 
@@ -92,6 +98,19 @@ app.get('/balance/:account', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+app.get('/uploads', (req, res) => {
+  const directoryPath = path.join(__dirname, 'uploads');
+  fs.readdir(directoryPath, (err, files) => {
+    if (err) {
+      return res.status(500).json({ error: 'An error occurred while reading the directory' });
+    }
+    const imageUrls = files.map(file => {
+      return `${req.protocol}://${req.get('host')}/uploads/${file}`;
+    });
+    res.status(200).json({ images: imageUrls });
+  });
+});
 // Define routes
 app.use('/api/auth', AuthRoute);
 app.use('/api/quiz', QuizRoute); // Use a separate base path for QuizRouteapp.use('/cours', coursRoutes);
@@ -99,6 +118,8 @@ app.use('/api/cours', coursRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/domain', domainRoutes);
 app.use('/user', userRoute);
+app.use('/cours', coursRoutes);
+app.use('/api/cours', courssRoutes);
 
 
 async function main() {
